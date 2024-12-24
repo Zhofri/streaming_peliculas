@@ -33,3 +33,11 @@ func (s *Suscripcion) SetUsuarioID(usuarioID int) error {
 	s.usuarioID = usuarioID
 	return nil
 }
+
+// Función que crea una suscripción predeterminada para el usuario
+func CreateDefaultSubscription(usuarioID int) Suscripcion {
+	return Suscripcion{
+		plan:      "Premium", // Puedes elegir cualquier plan como predeterminado
+		usuarioID: usuarioID,
+	}
+}

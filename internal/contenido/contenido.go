@@ -1,81 +1,93 @@
 package contenido
 
 import (
+	"encoding/json"
 	"errors"
-	"fmt"
-	"time"
+	
 )
 
-// Contenido representa un contenido del sistema.
+// Estructura que representa un contenido
 type Contenido struct {
-	id        int     //
-	titulo    string // Título del contenido
-	categoria string // Categoría del contenido
-	duracion  int    // Duración del contenido en minutos
+	ID          int    `json:"id"`          // Identificador único del contenido
+	Titulo      string `json:"titulo"`      // Título del contenido
+	Categoria   string `json:"categoria"`   // Categoría del contenido (e.g., acción, comedia)
+	Descripcion string `json:"descripcion"` // Descripción del contenido
 }
 
-// Implementación de la interfaz InfoPrinter.
-func (c Contenido) PrintInfo() {
-	fmt.Printf("Contenido: %s, Categoría: %s, Duración: %d minutos\n", c.titulo, c.categoria, c.duracion)
+// Lista predeterminada de contenido disponible
+var ContenidoDefault = []Contenido{
+	{ID: 1, Titulo: "Película Aventura", Categoria: "Aventura", Descripcion: "Una película emocionante llena de acción y paisajes impresionantes."},
+	{ID: 2, Titulo: "Comedia Familiar", Categoria: "Comedia", Descripcion: "Diversión para toda la familia con esta hilarante película."},
+	{ID: 3, Titulo: "Documental Naturaleza", Categoria: "Documental", Descripcion: "Explora los secretos más fascinantes de la naturaleza."},
+	{ID: 4, Titulo: "Thriller Psicológico", Categoria: "Suspenso", Descripcion: "Un thriller que te mantendrá en el borde del asiento."},
+	{ID: 5, Titulo: "Drama Épico", Categoria: "Drama", Descripcion: "Una historia conmovedora que tocará tu corazón."},
+	{ID: 6, Titulo: "Ciencia Ficción", Categoria: "Sci-Fi", Descripcion: "Aventúrate a mundos desconocidos con esta película futurista."},
+	{ID: 7, Titulo: "Romance Clásico", Categoria: "Romance", Descripcion: "Un romance que perdura a través del tiempo."},
 }
 
-// Setter para el título del contenido
-func (c *Contenido) SetTitulo(titulo string) error {
-	if titulo == "" {
-		return errors.New("el título no puede estar vacío")
+// Función para obtener la lista completa de contenido
+func ObtenerContenido() []Contenido {
+	return ContenidoDefault
+}
+
+// Función para buscar contenido por ID
+func BuscarContenidoPorID(id int) (*Contenido, error) {
+	for _, contenido := range ContenidoDefault {
+		if contenido.ID == id {
+			return &contenido, nil
+		}
 	}
-	c.titulo = titulo
+	return nil, errors.New("contenido no encontrado")
+}
+
+// Función para buscar contenido por categoría
+func BuscarContenidoPorCategoria(categoria string) []Contenido {
+	var contenidoFiltrado []Contenido
+	for _, contenido := range ContenidoDefault {
+		if contenido.Categoria == categoria {
+			contenidoFiltrado = append(contenidoFiltrado, contenido)
+		}
+	}
+	return contenidoFiltrado
+}
+
+// Función para agregar un nuevo contenido
+func AgregarNuevoContenido(id int, titulo, categoria, descripcion string) error {
+	// Verificar si ya existe un contenido con el mismo ID
+	for _, contenido := range ContenidoDefault {
+		if contenido.ID == id {
+			return errors.New("ya existe un contenido con ese ID")
+		}
+	}
+
+	// Crear y agregar el nuevo contenido
+	nuevoContenido := Contenido{
+		ID:          id,
+		Titulo:      titulo,
+		Categoria:   categoria,
+		Descripcion: descripcion,
+	}
+	ContenidoDefault = append(ContenidoDefault, nuevoContenido)
 	return nil
 }
 
-// Setter para la categoría del contenido
-func (c *Contenido) SetCategoria(categoria string) error {
-	if categoria == "" {
-		return errors.New("la categoría no puede estar vacía")
+// Función para eliminar contenido por ID
+func EliminarContenidoPorID(id int) error {
+	for i, contenido := range ContenidoDefault {
+		if contenido.ID == id {
+			// Eliminar el contenido de la lista
+			ContenidoDefault = append(ContenidoDefault[:i], ContenidoDefault[i+1:]...)
+			return nil
+		}
 	}
-	c.categoria = categoria
-	return nil
+	return errors.New("contenido no encontrado para eliminar")
 }
 
-// Setter para la duración del contenido
-func (c *Contenido) SetDuracion(duracion int) error {
-	if duracion <= 0 {
-		return errors.New("la duración debe ser un valor positivo")
+// Función para serializar el contenido a JSON
+func SerializarContenido(contenidos []Contenido) (string, error) {
+	contenidoJSON, err := json.Marshal(contenidos)
+	if err != nil {
+		return "", err
 	}
-	c.duracion = duracion
-	return nil
-}
-// GetTitulo obtiene el título del contenido
-func (c *Contenido) GetTitulo() string {
-	return c.titulo
-}
-
-// GetDuracion obtiene la duración del contenido
-func (c *Contenido) GetDuracion() int {
-	return c.duracion
-}
-// Prueba de Goroutines para la concurrencia.
-func TestGoroutines() {
-	ch := make(chan string)
-
-	go func() {
-		fmt.Println("Goroutine 1 ejecutando...")
-		time.Sleep(1 * time.Second)
-		ch <- "Resultado de Goroutine 1"
-	}()
-
-	go func() {
-		fmt.Println("Goroutine 2 ejecutando...")
-		time.Sleep(2 * time.Second)
-		ch <- "Resultado de Goroutine 2"
-	}()
-
-	// Esperar y recibir resultados de los canales
-	for i := 0; i < 2; i++ {
-		fmt.Println(<-ch)
-	}
-	close(ch)
-	fmt.Println("Todas las Goroutines finalizadas.")
-
-	
+	return string(contenidoJSON), nil
 }
